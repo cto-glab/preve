@@ -11,13 +11,10 @@
       "interactiveUiRendered": true,
       "installedApkMatchesSubmission": true,
       "physicalVehicleTested": false,
-      "file": "preve-pleos.apk",
+      "file": "gaonlab_preve-pleos_release.apk",
       "bytes": 79361151,
       "sha256": "6cb982fd7b1432cf4ddd7c5160339d7373f57d131cc7638915af10f9764b227a",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
+      "abis": ["arm64-v8a", "x86_64"],
       "versionName": "0.1.0",
       "versionCode": 1,
       "signedRelease": true,
@@ -30,13 +27,10 @@
       "interactiveUiRendered": true,
       "installedApkMatchesSubmission": true,
       "physicalVehicleTested": null,
-      "file": "preve-mobile.apk",
+      "file": "gaonlab_preve-mobile_release.apk",
       "bytes": 63022499,
       "sha256": "9e4e8cddd07dbca5aae807fbd188e830e6b9415c2af1523ee7ed995be1a50dec",
-      "abis": [
-        "arm64-v8a",
-        "x86_64"
-      ],
+      "abis": ["arm64-v8a", "x86_64"],
       "versionName": "0.1.0",
       "versionCode": 1,
       "signedRelease": true,

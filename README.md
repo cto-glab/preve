@@ -8,10 +8,10 @@
 
 저장소 루트의 **`apk/` 폴더**에 최종 설치용 APK를 제공합니다. Expo Go나 개발 서버 없이 설치·실행하는 서명된 release APK입니다.
 
-| 대상 | 설치 APK | 패키지명 |
-| --- | --- | --- |
-| Pleos Connect 차량 | [apk/preve-pleos.apk](apk/preve-pleos.apk) | `com.jb8.preve.pleos` |
-| Android 휴대폰 | [apk/preve-mobile.apk](apk/preve-mobile.apk) | `com.jb8.preve.mobile` |
+| 대상               | 설치 APK                                                                     | 패키지명               |
+| ------------------ | ---------------------------------------------------------------------------- | ---------------------- |
+| Pleos Connect 차량 | [apk/gaonlab_preve-pleos_release.apk](apk/gaonlab_preve-pleos_release.apk)   | `com.jb8.preve.pleos`  |
+| Android 휴대폰     | [apk/gaonlab_preve-mobile_release.apk](apk/gaonlab_preve-mobile_release.apk) | `com.jb8.preve.mobile` |
 
 두 APK 모두 ARM64(`arm64-v8a`)와 에뮬레이터용 `x86_64`를 포함합니다. 앱 표시 이름은 모두 **프리브**, 버전은 `0.1.0`입니다. 위 저장소의 APK 파일을 다운로드해 설치합니다.
 
@@ -21,10 +21,10 @@
 
 ### 설치 APK로 실행
 
-1. 휴대폰에 `preve-mobile.apk`를 설치하고 **프리브**를 실행합니다. APK 설치 시 Android에서 요청하는 출처 설치 허용 설정이 필요할 수 있습니다.
+1. 휴대폰에 `gaonlab_preve-mobile_release.apk`를 설치하고 **프리브**를 실행합니다. APK 설치 시 Android에서 요청하는 출처 설치 허용 설정이 필요할 수 있습니다.
 2. Google 로그인 → 필수 약관 동의 → Google 캘린더 연결 안내를 진행합니다. 캘린더를 연결하지 않아도 일정을 직접 등록할 수 있습니다.
 3. 휴대폰에서 일정·거래처를 등록하고, 미팅에 PDF를 첨부해 분석에 동의합니다. 분석 완료 후 요약·페이지별 근거·확인 질문을 조회합니다.
-4. Pleos Connect 기기 또는 에뮬레이터에 `preve-pleos.apk`를 설치합니다. 차량 앱에서 연결 QR/6자리 코드를 생성하고 휴대폰 설정 → 차량 연결에서 확인·승인합니다.
+4. Pleos Connect 기기 또는 에뮬레이터에 `gaonlab_preve-pleos_release.apk`를 설치합니다. 차량 앱에서 연결 QR/6자리 코드를 생성하고 휴대폰 설정 → 차량 연결에서 확인·승인합니다.
 5. 차량의 내 미팅·캘린더에서 일정을 확인합니다. **프리브와 대화 → 말하기**를 누르면 음성 전송 안내·마이크 권한 확인 후 질문할 수 있습니다.
 6. “오늘 일정 알려줘”, “다음 미팅 자료 요약해 줘”, “납기는?”, “출처 알려줘” 등을 물어보세요. 발화가 끝나면 자동으로 전송하며, 답변 후 다시 듣습니다. “대화 끝” 또는 **대화 중지**로 종료합니다.
 
@@ -32,9 +32,9 @@ Android SDK의 ADB로도 설치할 수 있습니다. `<기기ID>`는 `adb device
 
 ```sh
 adb devices
-adb -s <휴대폰_기기ID> install -r apk/preve-mobile.apk
+adb -s <휴대폰_기기ID> install -r apk/gaonlab_preve-mobile_release.apk
 adb -s <차량_기기ID> shell am get-current-user
-adb -s <차량_기기ID> install -r --user <위에서_확인한_사용자ID> apk/preve-pleos.apk
+adb -s <차량_기기ID> install -r --user <위에서_확인한_사용자ID> apk/gaonlab_preve-pleos_release.apk
 ```
 
 검증한 Pleos 에뮬레이터의 운전자 프로필은 사용자 `10`입니다. 휴대폰과 차량 APK는 서로 다른 패키지이므로 대상 환경에 맞게 설치하세요. `-r` 업데이트 설치는 기존 앱 데이터를 유지합니다.
@@ -61,12 +61,12 @@ npm run android:pleos    # Pleos 대상
 
 ### 실제 확인한 환경
 
-| 대상 | 환경 | 확인 범위 |
-| --- | --- | --- |
-| 모바일 | Samsung Galaxy Z Fold4 / SM-F936N 실기기 | 제출 APK 설치, 실제 앱 화면 실행, 설치본과 제출 파일의 SHA-256 일치 |
-| 차량 | Pleos Connect Emulator v2.1.0 / x86_64 / 사용자 10 | 제출 APK 설치, 조작 가능한 앱 화면 실행, 설치본과 제출 파일의 SHA-256 일치 |
-| 빌드 | JDK 17 · Gradle 8.14.3 · Android SDK 36 | 두 대상 release 빌드, APK 서명·패키지·ARM64/x86_64 확인 |
-| 자동 검증 | 앱 66개 · 서버 30개 테스트 | 계정 격리, 일정 선택, 분석 형식, 음성 API 및 오류 처리 등 |
+| 대상      | 환경                                               | 확인 범위                                                                  |
+| --------- | -------------------------------------------------- | -------------------------------------------------------------------------- |
+| 모바일    | Samsung Galaxy Z Fold4 / SM-F936N 실기기           | 제출 APK 설치, 실제 앱 화면 실행, 설치본과 제출 파일의 SHA-256 일치        |
+| 차량      | Pleos Connect Emulator v2.1.0 / x86_64 / 사용자 10 | 제출 APK 설치, 조작 가능한 앱 화면 실행, 설치본과 제출 파일의 SHA-256 일치 |
+| 빌드      | JDK 17 · Gradle 8.14.3 · Android SDK 36            | 두 대상 release 빌드, APK 서명·패키지·ARM64/x86_64 확인                    |
+| 자동 검증 | 앱 66개 · 서버 30개 테스트                         | 계정 격리, 일정 선택, 분석 형식, 음성 API 및 오류 처리 등                  |
 
 Google STT→가상 일정 HTTP 조회→TTS 왕복은 실제 API로 검증했습니다. 이번 제출 APK의 설치·실행 확인은 전체 로그인/PDF/연속 대화의 재검증이나 실제 차량 하드웨어 검증을 의미하지 않습니다. 설치 파일별 검증 환경은 [APK 검증 기록](apk/verification.json)에 정리했습니다.
 
