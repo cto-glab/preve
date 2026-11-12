@@ -1,0 +1,29 @@
+import {useCallback,useRef,useState} from 'react';
+import {useFocusEffect} from 'expo-router';
+import {ActivityIndicator,Alert,Text,TextInput,View,StyleSheet} from 'react-native';
+import {Screen} from '../../components/Screen';
+import {Action} from '../../components/Action';
+import {styles} from '../../components/contentStyles';
+import {useAuth} from '../../auth/context';
+import {useMeetings} from '../meetings/context';
+import {demoMeetings} from '../meetings/demo';
+import {theme} from '../../theme/tokens';
+import {Contact,ContactInput,contactsApi,emptyContact,contactMessage,contactInput} from './api';
+export function ContactsScreen(){const {demo}=useMeetings(),{session}=useAuth();
+ if(demo)return <Screen title="거래처"><Text style={styles.badge}>체험 모드 · 가상 거래처</Text>{demoMeetings.map(meeting=><View key={meeting.id} style={styles.card}><Text style={styles.heading}>{meeting.company}</Text><Text style={styles.subtitle}>{meeting.contact}</Text><Text style={styles.subtitle}>확인된 소통 선호 없음</Text></View>)}</Screen>;
+ if(!session)return <Screen title="거래처"><Text style={styles.subtitle}>로그인 후 거래처를 등록하고 미팅에 연결할 수 있어요.</Text></Screen>;
+ return <ContactList key={session.userId} />;
+}
+function ContactList(){const [items,setItems]=useState<Contact[]>([]),[query,setQuery]=useState(''),[form,setForm]=useState<ContactInput|null>(null),[editing,setEditing]=useState<string|undefined>(),[busy,setBusy]=useState(false),[error,setError]=useState(''),[loading,setLoading]=useState(true),[revision,setRevision]=useState(0);const lock=useRef(false),alive=useRef(false);
+ useFocusEffect(useCallback(()=>{alive.current=true;let active=true;setLoading(true);void contactsApi.list().then(value=>{if(active){setItems(value);setError('');}}).catch(e=>{if(active)setError(contactMessage(e));}).finally(()=>{if(active)setLoading(false);});return ()=>{active=false;alive.current=false;};},[revision]));
+ const save=async()=>{if(!form||lock.current)return;try{const input=contactInput(form);lock.current=true;setBusy(true);setError('');const item=await contactsApi.save(input,editing);if(alive.current){setItems(current=>[...current.filter(row=>row.id!==item.id),item].sort((a,b)=>a.companyName.localeCompare(b.companyName)));setForm(null);setEditing(undefined);}}catch(e){if(alive.current)setError(contactMessage(e));}finally{lock.current=false;if(alive.current)setBusy(false);}};
+ const remove=(item:Contact)=>Alert.alert('거래처 삭제','미팅의 담당자 연결도 해제됩니다. 삭제할까요?',[{text:'취소',style:'cancel'},{text:'삭제',style:'destructive',onPress:()=>{if(lock.current)return;lock.current=true;setBusy(true);void contactsApi.remove(item.id).then(()=>{if(alive.current)setItems(current=>current.filter(row=>row.id!==item.id));}).catch(e=>{if(alive.current)setError(contactMessage(e));}).finally(()=>{lock.current=false;if(alive.current)setBusy(false);});}}]);
+ const fields:[keyof ContactInput,string,number][]=[['companyName','거래처명 (필수)',160],['personName','담당자명 (선택)',100],['position','직책 (선택)',100],['contactInfo','연락처 · 이메일 (선택)',240],['preferences','확인한 업무·소통 선호 (선택)',1000]];
+ const matches=items.filter(item=>[item.companyName,item.personName,item.position,item.contactInfo].join(' ').toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()));
+ return <Screen key={form?'editor':'list'} title="거래처"><Text style={ui.body}>내 계정에 거래처와 담당자를 저장하고 미팅 상세에서 연결하세요.</Text>{!!error&&<Text accessibilityRole="alert" style={ui.error}>{error}</Text>}
+ {form?<View style={ui.card}><Text style={ui.heading}>{editing?'거래처 수정':'거래처 등록'}</Text>{fields.map(([key,label,max])=><View key={key} style={{gap:6}}><Text style={ui.label}>{label}</Text><TextInput accessibilityLabel={label} style={ui.input} value={form[key]} maxLength={max} editable={!busy} multiline={key==='preferences'} onChangeText={text=>setForm(current=>current?{...current,[key]:text}:current)} /></View>)}<Text style={ui.body}>직접 확인한 업무 선호만 입력해 주세요. 상대방의 성격을 추측하지 않습니다.</Text><Action label={busy?'저장 중…':'저장'} disabled={busy} onPress={()=>void save()}/><Action label="취소" secondary disabled={busy} onPress={()=>{setForm(null);setEditing(undefined);}}/></View>:<Action label="거래처 등록" disabled={busy} onPress={()=>{setEditing(undefined);setForm({...emptyContact});setError('');}}/>}
+ <View style={{gap:6}}><Text style={ui.label}>거래처·담당자 검색</Text><TextInput accessibilityLabel="거래처·담당자 검색" style={ui.input} value={query} onChangeText={setQuery} placeholder="거래처명, 담당자명, 연락처"/></View>
+ {loading&&<ActivityIndicator accessibilityLabel="거래처 불러오는 중"/>}{!loading&&!matches.length&&<Text style={ui.body}>{items.length?'검색 결과가 없습니다.':'등록된 거래처가 없습니다. 거래처를 추가해 주세요.'}</Text>}
+ {matches.map(item=><View key={item.id} style={ui.card}><Text style={ui.heading}>{item.companyName}</Text>{!!(item.personName||item.position)&&<Text style={ui.body}>{[item.personName,item.position].filter(Boolean).join(' · ')}</Text>}{!!item.contactInfo&&<Text selectable style={ui.body}>{item.contactInfo}</Text>}{!!item.preferences&&<Text style={ui.body}>확인한 선호: {item.preferences}</Text>}<View style={{flexDirection:'row',gap:10}}><View style={{flex:1}}><Action label="수정" secondary disabled={busy} onPress={()=>{setForm({...item});setEditing(item.id);setError('');}}/></View><View style={{flex:1}}><Action label="삭제" secondary disabled={busy} onPress={()=>remove(item)}/></View></View></View>)}<Action label="목록 새로고침" secondary disabled={busy||loading} onPress={()=>setRevision(value=>value+1)}/></Screen>;
+}
+const ui=StyleSheet.create({card:{padding:16,gap:12,borderWidth:1,borderColor:theme.colors.border,borderRadius:16},heading:{fontSize:18,lineHeight:26,fontWeight:'600',color:theme.colors.textPrimary},label:{fontSize:14,fontWeight:'600',color:theme.colors.textPrimary},body:{fontSize:14,lineHeight:22,color:theme.colors.textSecondary},error:{fontSize:14,lineHeight:22,color:'#b42318'},input:{borderWidth:1,borderColor:theme.colors.border,borderRadius:10,padding:12,fontSize:16,color:theme.colors.textPrimary}});

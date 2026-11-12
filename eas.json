@@ -1,0 +1,17 @@
+{
+  "cli": { "version": ">= 16.28.0", "appVersionSource": "local" },
+  "build": {
+    "mobile": {
+      "node": "22.14.0",
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": { "APP_TARGET": "mobile" }
+    },
+    "pleos": {
+      "node": "22.14.0",
+      "distribution": "internal",
+      "android": { "buildType": "apk" },
+      "env": { "APP_TARGET": "pleos" }
+    }
+  }
+}

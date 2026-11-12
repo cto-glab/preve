@@ -1,0 +1,2269 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Preve API",
+    "version": "0.8.0",
+    "description": "Google sign-in sessions, PDF analysis and user-initiated read-only Google Calendar import. Account-owned contacts and meeting contact links."
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "Process alive"
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "ready",
+        "responses": {
+          "200": {
+            "description": "MySQL reachable"
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/meetings/{meetingId}/documents": {
+      "parameters": [
+        {
+          "name": "meetingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      ],
+      "post": {
+        "operationId": "uploadMeetingDocument",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{16,80}$"
+            }
+          },
+          {
+            "name": "X-AI-Consent",
+            "in": "header",
+            "required": true,
+            "description": "Explicit consent to send the PDF to OpenAI for meeting preparation. Independent of Google login notice.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "document-analysis-2026-10-28"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "One PDF, maximum 20 MiB and 100 pages; encrypted or invalid PDFs rejected."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Document accepted; analysis may still be queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadReceipt"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listMeetingDocuments",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Up to 100 newest documents owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "documents"
+                  ],
+                  "properties": {
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Document"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/documents/{documentId}": {
+      "parameters": [
+        {
+          "name": "documentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getDocument",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Status and analysis when ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Document"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/documents/{documentId}/retry": {
+      "parameters": [
+        {
+          "name": "documentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        }
+      ],
+      "post": {
+        "operationId": "retryDocument",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "description": "Explicit user retry of failed analysis only. Maximum three claimed attempts including interrupted worker recovery. No automatic retries on AI errors.",
+        "responses": {
+          "202": {
+            "description": "Document accepted; analysis may still be queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadReceipt"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-AI-Consent",
+            "in": "header",
+            "required": true,
+            "description": "Explicit consent to send the PDF to OpenAI for meeting preparation. Independent of Google login notice.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "document-analysis-2026-10-28"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "/v1/auth/google/challenge": {
+      "post": {
+        "operationId": "googleLoginChallenge",
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginChallenge"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/google": {
+      "post": {
+        "operationId": "googleLogin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "challengeId",
+                  "idToken",
+                  "consentVersion"
+                ],
+                "properties": {
+                  "challengeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "idToken": {
+                    "type": "string",
+                    "maxLength": 16000
+                  },
+                  "deviceName": {
+                    "type": "string",
+                    "maxLength": 80
+                  },
+                  "consentVersion": {
+                    "type": "string",
+                    "enum": [
+                      "auth-2026-10-28"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "operationId": "refreshSession",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "refreshToken"
+                ],
+                "properties": {
+                  "refreshToken": {
+                    "type": "string",
+                    "minLength": 32,
+                    "maxLength": 128
+                  }
+                }
+              }
+            }
+          }
+        },
+        "description": "Rotates both tokens. Reuse of an old refresh token revokes that session. Client must serialize refreshes.",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Session revoked"
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "sessions"
+                  ],
+                  "properties": {
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/ConnectedSession"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/sessions/{sessionId}": {
+      "parameters": [
+        {
+          "name": "sessionId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "operationId": "revokeSession",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Owned session revoked"
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/meetings": {
+      "get": {
+        "operationId": "listMeetings",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Up to 100 owned meetings ordered by start time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "meetings"
+                  ],
+                  "properties": {
+                    "meetings": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Meeting"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createManualMeeting",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "description": "Mobile only. Manual registration is independent of Google Calendar.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "startsAt"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "startsAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Canonical UTC ISO 8601 with milliseconds"
+                  },
+                  "location": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meeting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/meetings/{meetingId}": {
+      "parameters": [
+        {
+          "name": "meetingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getMeeting",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owned meeting",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Meeting"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Request rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/calendar/google/sync": {
+      "post": {
+        "operationId": "syncGoogleCalendar",
+        "summary": "Import up to 100 primary Calendar events for the next 90 days after separate user consent",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "accessToken"
+                ],
+                "properties": {
+                  "accessToken": {
+                    "type": "string",
+                    "minLength": 20,
+                    "maxLength": 4096,
+                    "description": "Ephemeral Google OAuth access token; never stored or returned"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imported events; hasMore indicates bounded first page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "imported",
+                    "hasMore"
+                  ],
+                  "properties": {
+                    "imported": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session missing or expired"
+          },
+          "403": {
+            "description": "Mobile session, matching Google account and Calendar permission required"
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Calendar API or database unavailable"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings": {
+      "post": {
+        "summary": "Create 5-minute vehicle pairing code",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "deviceName": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pairId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "userCode": {
+                      "type": "string",
+                      "pattern": "^\\d{3}-\\d{3}$"
+                    },
+                    "deviceName": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "deviceSecret": {
+                      "type": "string",
+                      "description": "Returned to the originating vehicle only"
+                    },
+                    "intervalSeconds": {
+                      "type": "integer",
+                      "minimum": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/resolve": {
+      "post": {
+        "summary": "Preview a pairing from an authenticated mobile session",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userCode": {
+                    "type": "string",
+                    "pattern": "^\\d{3}[ -]?\\d{3}$"
+                  }
+                },
+                "required": [
+                  "userCode"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "pairId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "userCode": {
+                      "type": "string",
+                      "pattern": "^\\d{3}-\\d{3}$"
+                    },
+                    "deviceName": {
+                      "type": "string"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/token": {
+      "post": {
+        "summary": "Consume mobile-approved pairing exactly once; pending returns 202",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pairId": {
+                    "type": "string"
+                  },
+                  "deviceSecret": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pairId",
+                  "deviceSecret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string"
+                    },
+                    "session": {
+                      "$ref": "#/components/schemas/ServiceSession"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Pending mobile approval; retry after at least 3 seconds"
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/cancel": {
+      "post": {
+        "summary": "Cancel pending vehicle request using its separate secret",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "pairId": {
+                    "type": "string"
+                  },
+                  "deviceSecret": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "pairId",
+                  "deviceSecret"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        }
+      }
+    },
+    "/v1/auth/pairings/{pairId}/approve": {
+      "post": {
+        "summary": "Explicit mobile approval for the displayed vehicle code",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        },
+        "parameters": [
+          {
+            "name": "pairId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/auth/pairings/{pairId}/deny": {
+      "post": {
+        "summary": "Explicit mobile rejection",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "state": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Service session or device secret invalid"
+          },
+          "403": {
+            "description": "Mobile session required"
+          },
+          "409": {
+            "description": "Already approved or denied"
+          },
+          "410": {
+            "description": "Expired, consumed or closed"
+          },
+          "429": {
+            "description": "Rate limited"
+          }
+        },
+        "parameters": [
+          {
+            "name": "pairId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ]
+      }
+    },
+    "/v1/contacts": {
+      "get": {
+        "operationId": "listContacts",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contacts"
+                  ],
+                  "properties": {
+                    "contacts": {
+                      "type": "array",
+                      "maxItems": 500,
+                      "items": {
+                        "$ref": "#/components/schemas/Contact"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/contacts/{contactId}": {
+      "parameters": [
+        {
+          "name": "contactId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Contact"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContactInput"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deleted": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        }
+      }
+    },
+    "/v1/meetings/{meetingId}/contact": {
+      "parameters": [
+        {
+          "name": "meetingId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "maxLength": 64
+          }
+        }
+      ],
+      "get": {
+        "operationId": "getMeetingContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contact"
+                  ],
+                  "properties": {
+                    "contact": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/Contact"
+                        }
+                      ],
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        }
+      },
+      "put": {
+        "operationId": "linkMeetingContact",
+        "security": [
+          {
+            "serviceBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "contact"
+                  ],
+                  "properties": {
+                    "contact": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/Contact"
+                        }
+                      ],
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Session required"
+          },
+          "403": {
+            "description": "Mobile session required for writes"
+          },
+          "404": {
+            "description": "Owned resource not found"
+          },
+          "503": {
+            "description": "Database migration or service required"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "contactId"
+                ],
+                "properties": {
+                  "contactId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "serviceBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Opaque service access token. Server stores only its SHA-256 hash. Expires and may be revoked."
+      }
+    },
+    "schemas": {
+      "UploadReceipt": {
+        "type": "object",
+        "required": [
+          "documentId",
+          "status"
+        ],
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "processing",
+              "ready",
+              "failed"
+            ]
+          }
+        }
+      },
+      "AnalysisFact": {
+        "type": "object",
+        "required": [
+          "kind",
+          "text",
+          "page",
+          "quote"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "delivery",
+              "price",
+              "scope",
+              "other"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "quote": {
+            "type": "string"
+          }
+        }
+      },
+      "DocumentAnalysis": {
+        "type": "object",
+        "required": [
+          "source",
+          "model",
+          "pageCount",
+          "summary",
+          "facts",
+          "openQuestions",
+          "warnings",
+          "evidenceVerification",
+          "analyzedAt"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "openai"
+            ]
+          },
+          "model": {
+            "type": "string"
+          },
+          "pageCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "summary": {
+            "type": "string"
+          },
+          "facts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalysisFact"
+            }
+          },
+          "openQuestions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "evidenceVerification": {
+            "type": "string",
+            "enum": [
+              "ai-extracted"
+            ],
+            "description": "Page range checked; quote fidelity and meaning still require source review."
+          },
+          "analyzedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Document": {
+        "type": "object",
+        "required": [
+          "documentId",
+          "meetingId",
+          "fileName",
+          "size",
+          "pageCount",
+          "status",
+          "error",
+          "analysis"
+        ],
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "meetingId": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "maximum": 20971520
+          },
+          "pageCount": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "queued",
+              "processing",
+              "ready",
+              "failed"
+            ]
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "analysis": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DocumentAnalysis"
+              }
+            ]
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": [
+              "code",
+              "requestId"
+            ],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "requestId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        }
+      },
+      "LoginChallenge": {
+        "type": "object",
+        "required": [
+          "challengeId",
+          "nonce",
+          "expiresAt"
+        ],
+        "properties": {
+          "challengeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 32
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ServiceSession": {
+        "type": "object",
+        "required": [
+          "userId",
+          "sessionId",
+          "target",
+          "accessToken",
+          "refreshToken",
+          "expiresAt",
+          "refreshExpiresAt"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "mobile",
+              "pleos"
+            ]
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "refreshExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ConnectedSession": {
+        "type": "object",
+        "required": [
+          "sessionId",
+          "target",
+          "deviceName",
+          "createdAt",
+          "expiresAt"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "mobile",
+              "pleos"
+            ]
+          },
+          "deviceName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Meeting": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "startsAt",
+          "location",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "location": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "manual",
+              "google"
+            ]
+          }
+        }
+      },
+      "ContactInput": {
+        "type": "object",
+        "required": [
+          "companyName"
+        ],
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1
+          },
+          "personName": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "position": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "contactInfo": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "preferences": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      },
+      "Contact": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ContactInput"
+          },
+          {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

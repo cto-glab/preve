@@ -1,0 +1,87 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+.npm-cache/
+artifacts/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+# Local Expo modules also generate Android build outputs and caches.
+/modules/*/android/build/
+/modules/*/android/.gradle/
+/modules/*/android/.cxx/
+/modules/*/android/local.properties
+*.orig.*
+*.jks
+*.keystore
+/credentials.json
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env*
+!.env.example
+/tmp/
+/output/
+
+# Internal documentation and local workspace
+/automobile.code-workspace
+/document/resume-state.md
+/document/gleo-support-inquiry.md
+/document/google-login-setup.md
+/document/local-development.md
+/document/pleos_meeting_assistant_spec_*.pdf
+
+# typescript
+*.tsbuildinfo
+
+app-example
+
+# generated native folders
+/.git-version.json
+/ios
+/android
+
+# Credentials, private workspace and runtime data
+secrets/
+credentials/
+.aws/
+.codex/
+.agents/
+*service-account*.json
+*service_account*.json
+*client_secret*.json
+preve-513001-*.json
+google-voice.json
+*.pfx
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.sql.gz
+*.log
+
+# Internal progress and diagnostics (keep local)
+/document/implementation-status.md
+/document/gleo-testing.md

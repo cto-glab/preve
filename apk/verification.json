@@ -1,0 +1,46 @@
+{
+  "verifiedAt": "2026-11-02T14:50:01.263605+09:00",
+  "sourceCommit": "4f20409c703f5567185483073b6db0831f627178",
+  "requiredServerCommit": "5018278",
+  "scope": "Installation, interactive app launch and identical installed APK hash; not a physical vehicle or complete voice/PDF end-to-end certification.",
+  "artifacts": [
+    {
+      "package": "com.jb8.preve.pleos",
+      "environment": "Pleos Connect v2.1.0 emulator, driver user 10",
+      "installedAndLaunched": true,
+      "interactiveUiRendered": true,
+      "installedApkMatchesSubmission": true,
+      "physicalVehicleTested": false,
+      "file": "preve-pleos.apk",
+      "bytes": 79361151,
+      "sha256": "6cb982fd7b1432cf4ddd7c5160339d7373f57d131cc7638915af10f9764b227a",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "versionName": "0.1.0",
+      "versionCode": 1,
+      "signedRelease": true,
+      "signingCertificateSha1": "5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25"
+    },
+    {
+      "package": "com.jb8.preve.mobile",
+      "environment": "Samsung SM-F936N physical Android device",
+      "installedAndLaunched": true,
+      "interactiveUiRendered": true,
+      "installedApkMatchesSubmission": true,
+      "physicalVehicleTested": null,
+      "file": "preve-mobile.apk",
+      "bytes": 63022499,
+      "sha256": "9e4e8cddd07dbca5aae807fbd188e830e6b9415c2af1523ee7ed995be1a50dec",
+      "abis": [
+        "arm64-v8a",
+        "x86_64"
+      ],
+      "versionName": "0.1.0",
+      "versionCode": 1,
+      "signedRelease": true,
+      "signingCertificateSha1": "5E:8F:16:06:2E:A3:CD:2C:4A:0D:54:78:76:BA:A6:F3:8C:AB:F6:25"
+    }
+  ]
+}

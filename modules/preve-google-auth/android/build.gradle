@@ -1,0 +1,16 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+group = 'ai.preve.auth'
+version = '0.1.0'
+android {
+  namespace "ai.preve.auth"
+  defaultConfig { versionCode 1; versionName '0.1.0' }
+}
+dependencies {
+  implementation 'com.google.android.gms:play-services-auth:22.0.0'
+  implementation 'androidx.credentials:credentials:1.6.0'
+  implementation 'androidx.credentials:credentials-play-services-auth:1.6.0'
+  implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
+}

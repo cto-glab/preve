@@ -1,0 +1,66 @@
+{
+  "packageName": "com.jb8.preve.pleos",
+  "appDescription": "An app for preparing work meetings using schedules and user-provided document analysis.",
+  "invokeWord": "프리브",
+  "version": "0.1.0",
+  "actionCalls": [
+    {
+      "type": "function",
+      "function": {
+        "name": "GET_PREVE_MEETINGS",
+        "description": "Read the connected account meeting schedule.",
+        "component": "activity",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "period": {
+              "type": "string",
+              "enum": [
+                "today",
+                "next"
+              ],
+              "description": "The schedule period to retrieve."
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GET_PREVE_BRIEFING",
+        "description": "Read the existing PDF analysis summary for a meeting.",
+        "component": "activity",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "meetingId": {
+              "type": "string",
+              "description": "The meeting identifier returned by a schedule lookup."
+            }
+          },
+          "required": []
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "GET_PREVE_EVIDENCE",
+        "description": "Read existing PDF evidence for a meeting.",
+        "component": "activity",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "meetingId": {
+              "type": "string",
+              "description": "The meeting identifier returned by a schedule lookup."
+            }
+          },
+          "required": []
+        }
+      }
+    }
+  ]
+}

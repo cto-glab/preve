@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "appearance": "light",
+  "colors": {
+    "background": "#FFFFFF",
+    "surface": "#FFFFFF",
+    "textPrimary": "#16243B",
+    "textSecondary": "#63738B",
+    "primary": "#2563EB",
+    "onPrimary": "#FFFFFF",
+    "primarySoft": "#EDF4FF",
+    "border": "#E1E8F2",
+    "error": "#B42318"
+  },
+  "spacing": [4, 8, 12, 16, 20, 24, 32],
+  "radius": {"card": 20, "button": 12, "badge": 8},
+  "mobile": {
+    "pagePadding": 20,
+    "minTouchSize": 48,
+    "type": {
+      "title": {"size": 26, "lineHeight": 35},
+      "section": {"size": 18, "lineHeight": 26},
+      "briefing": {"size": 16, "lineHeight": 26},
+      "body": {"size": 15, "lineHeight": 23},
+      "secondary": {"size": 12, "lineHeight": 18},
+      "button": {"size": 15, "lineHeight": 22}
+    }
+  },
+  "pleos": {
+    "pagePadding": {"wide": 24, "narrow": 20, "short": 16},
+    "minTouchSize": 64,
+    "minButtonGap": 12,
+    "breakpoints": {"shortHeightBelow": 420, "narrowWidthBelow": 600},
+    "layoutPriority": ["short", "narrow", "wide"],
+    "type": {
+      "title": {"size": 28, "lineHeight": 38},
+      "section": {"size": 22, "lineHeight": 31},
+      "briefing": {"size": 26, "lineHeight": 40},
+      "body": {"size": 20, "lineHeight": 30},
+      "secondary": {"size": 16, "lineHeight": 24},
+      "button": {"size": 20, "lineHeight": 28}
+    }
+  }
+}

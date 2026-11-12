@@ -1,0 +1,1 @@
+export function displayPdfName(input:string){let value=input;try{value=decodeURIComponent(value);}catch{/* Literal percent signs are valid file names. */}value=value.replace(/\\/g,'/').split('/').pop()!.replace(/[\x00-\x1f\x7f]/g,'').trim();return value.length>200?value.slice(0,196)+'.pdf':value;}
